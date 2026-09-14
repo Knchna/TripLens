@@ -101,8 +101,6 @@ TripLens aims to explain why a package is recommended rather than providing only
 
 Team Members:
 
-Abhishek Kumar
-
 Arshak Nihal
 
 Kanchana Krishna
@@ -110,3 +108,5 @@ Kanchana Krishna
 R Anand
 
 Meenakshi Madhu
+
+Abhishek Kumar
