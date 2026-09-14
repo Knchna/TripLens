@@ -99,10 +99,10 @@ The system analyzes package itineraries to provide insights into:
 
 TripLens aims to explain why a package is recommended rather than providing only a final ranking.
 
-###Team Members:
+Team Members:
 
-####Abhishek Kumar
-####Arshak Nihal
-####Kanchana Krishna
-####R Anand
-####Meenakshi Madhu
+Abhishek Kumar
+Arshak Nihal
+Kanchana Krishna
+R Anand
+Meenakshi Madhu
