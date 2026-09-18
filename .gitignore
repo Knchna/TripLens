@@ -1,0 +1,7 @@
+﻿.venv/
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+# Avoid pushing massive local vector DB binaries; Chroma builds locally on setup
+database/chroma_db/
