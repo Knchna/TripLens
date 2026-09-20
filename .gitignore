@@ -1,0 +1,17 @@
+# Local Python environments and caches
+venv/
+.venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+# Generated semantic-search index; rebuild with scripts/chroma_sync.py when needed
+database/chroma_db/
+
+# Nested legacy checkout (this project is the repository root)
+TripLens/
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
