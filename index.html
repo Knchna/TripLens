@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripLens — AI-Powered Travel Package Intelligence & Decision Support</title>
+  <meta name="description"
+    content="TripLens is the intelligence layer for independent travel agencies — providing transparent effective cost analysis, itinerary intensity scoring, and sentiment-based trust insights.">
+
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="/design-system.css">
+  <link rel="stylesheet" href="/styles.css">
+
+  <!-- Favicon -->
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230F4C3A'><path d='M12 2L2 7l10 5 10-5-10-5zm0 9l-10-5v9l10 5 10-5v-9l-10 5z'/></svg>">
+</head>
+
+<body>
+
+  <div class="app-wrapper">
+
+    <!-- Top Global App Header -->
+    <header class="app-header">
+      <div class="brand-container" id="brand-home-link" title="TripLens Home">
+        <div class="brand-logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path
+              d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+            </path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">TripLens <span class="ai-tag">AI INTEL</span></span>
+          <span class="brand-subtitle">Travel Package Decision Intelligence</span>
+        </div>
+      </div>
+
+      <!-- Navigation Step Indicators -->
+      <nav class="step-tracker" id="step-tracker" aria-label="Trip Planning Steps">
+        <span class="step-item active" data-step="home">1. Plan</span>
+        <span class="step-arrow">→</span>
+        <span class="step-item" data-step="preferences">2. Preferences</span>
+        <span class="step-arrow">→</span>
+        <span class="step-item" data-step="results">3. Matches</span>
+        <span class="step-arrow">→</span>
+        <span class="step-item" data-step="details">4. Details</span>
+      </nav>
+
+      <div class="header-actions">
+        <button class="btn-header-action" id="btn-quick-compare" title="Compare all trips">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 3h5v5M4 20L21 3m0 13v5h-5m-6 0H4v-5m0-6V4h5" />
+          </svg>
+          <span>Compare Matrix</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dynamic Content Area -->
+    <main class="main-content">
+
+      <!-- ====================================================================
+           SCREEN 1: HOME SCREEN
+           ==================================================================== -->
+      <section class="screen home-screen active" id="screen-home" aria-label="Home Screen">
+
+        <!-- Destination Selection Bar -->
+        <div class="dest-select-bar">
+          <span class="dest-label">Select Destination Scope:</span>
+          <div class="dest-pills-list" id="dest-pills-container">
+            <button class="dest-pill active" data-dest="Himachal (Shimla/Manali)">🏔️ Himachal (Shimla/Manali)</button>
+            <button class="dest-pill" data-dest="Kerala">🌿 Kerala Escapes</button>
+            <button class="dest-pill" data-dest="all">🌐 All Packages</button>
+          </div>
+        </div>
+
+        <!-- Dynamic Hero Card -->
+        <div class="home-hero-card">
+          <img id="home-hero-img" src="/assets/hero-himachal.svg" alt="Snow mountains of Shimla and Manali"
+            class="home-hero-img">
+          <div class="home-hero-overlay">
+            <span class="hero-pill-badge" id="hero-badge-tag">✨ Independent Agency Intelligence • TripLens</span>
+            <div class="hero-tagline-heading">See Beyond The Package. Travel Smarter.</div>
+          </div>
+        </div>
+
+        <div class="home-hero-text">
+          <h1>See beyond the package. Travel smarter.</h1>
+          <p>The intelligence layer analyzing independent travel agencies, sentiment reviews, effective costs, and
+            hidden caveats.</p>
+        </div>
+
+        <!-- Natural-Language Input Form -->
+        <div class="ai-prompt-container">
+          <div class="ai-prompt-header">
+            <span class="ai-prompt-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5z" />
+              </svg>
+              AI Trip Prompt
+            </span>
+            <span style="font-size: 0.72rem; color: var(--text-subtle);" id="prompt-scope-label">Himachal & Kerala
+              Packages</span>
+          </div>
+          <textarea class="ai-prompt-textarea" id="user-trip-prompt"
+            placeholder="Type your trip request in plain English..."
+            rows="3">I want a 6-day Shimla & Manali trip from Delhi for 2 people under ₹20,000 with Solang Valley, snow points, and a relaxed pace.</textarea>
+        </div>
+
+        <!-- Small Suggestion Chips -->
+        <div class="chips-section">
+          <span class="chips-label">Try quick presets:</span>
+          <div class="chips-list" id="suggestion-chips">
+            <!-- Rendered dynamically from data.js -->
+          </div>
+        </div>
+
+        <!-- Primary CTA Button -->
+        <button class="btn-primary-cta" id="btn-find-my-trip">
+          <span>Analyze & Find Matches</span>
+          <span class="cta-arrow">→</span>
+        </button>
+
+      </section>
+
+      <!-- ====================================================================
+           SCREEN 2: AI PREFERENCES SCREEN
+           ==================================================================== -->
+      <section class="screen pref-screen" id="screen-preferences" aria-label="AI Preferences Screen">
+
+        <div class="screen-header-bar">
+          <button class="screen-back-btn" data-back-to="home">
+            <span>←</span> Back to Edit Prompt
+          </button>
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--primary);">Step 2 of 4</span>
+        </div>
+
+        <div class="screen-title-group">
+          <h2 class="screen-title">AI Extracted Preferences</h2>
+          <p class="screen-subtitle">We parsed your request into explicit travel parameters. Review or customize before
+            candidate retrieval.</p>
+        </div>
+
+        <!-- Extracted Request Banner -->
+        <div class="parsed-callout-card">
+          <div class="parsed-callout-icon">💡</div>
+          <div class="parsed-callout-text" id="ai-extraction-summary">
+            <strong>AI Extraction:</strong> "6-day Shimla & Manali trip from Delhi for 2 travelers within ₹20,000
+            budget."
+          </div>
+        </div>
+
+        <!-- 6 Editable Cards Grid -->
+        <div class="pref-grid" id="pref-cards-container">
+
+          <!-- Card 1: Budget Range -->
+          <div class="pref-card" data-pref-key="budget">
+            <div class="pref-card-header">
+              <div class="pref-card-label-group">
+                <span class="pref-icon-circle">💰</span>
+                <span class="pref-label">Budget Range</span>
+              </div>
+              <button class="btn-edit-pref" data-edit="budget">Edit</button>
+            </div>
+            <div class="pref-value" id="disp-pref-budget">₹12,000 – ₹22,000</div>
+            <div class="pref-note">Min & Max budget inputs</div>
+          </div>
+
+          <!-- Card 2: Duration -->
+          <div class="pref-card" data-pref-key="duration">
+            <div class="pref-card-header">
+              <div class="pref-card-label-group">
+                <span class="pref-icon-circle">📅</span>
+                <span class="pref-label">Duration</span>
+              </div>
+              <button class="btn-edit-pref" data-edit="duration">Edit</button>
+            </div>
+            <div class="pref-value" id="disp-pref-duration">6 days</div>
+            <div class="pref-note">5 nights included</div>
+          </div>
+
+          <!-- Card 3: Destination Scope -->
+          <div class="pref-card" data-pref-key="destination">
+            <div class="pref-card-header">
+              <div class="pref-card-label-group">
+                <span class="pref-icon-circle">🏔️</span>
+                <span class="pref-label">Destination</span>
+              </div>
+              <button class="btn-edit-pref" data-edit="destination">Edit</button>
+            </div>
+            <div class="pref-value" id="disp-pref-destination">Himachal</div>
+            <div class="pref-note">Shimla & Manali Circuit</div>
+          </div>
+
+          <!-- Card 4: From / Origin -->
+          <div class="pref-card" data-pref-key="from">
+            <div class="pref-card-header">
+              <div class="pref-card-label-group">
+                <span class="pref-icon-circle">📍</span>
+                <span class="pref-label">From</span>
+              </div>
+              <button class="btn-edit-pref" data-edit="from">Edit</button>
+            </div>
+            <div class="pref-value" id="disp-pref-from">Delhi</div>
+            <div class="pref-note">Departure point</div>
+          </div>
+
+          <!-- Card 5: Travelers -->
+          <div class="pref-card" data-pref-key="travelers">
+            <div class="pref-card-header">
+              <div class="pref-card-label-group">
+                <span class="pref-icon-circle">👥</span>
+                <span class="pref-label">Travelers</span>
+              </div>
+              <button class="btn-edit-pref" data-edit="travelers">Edit</button>
+            </div>
+            <div class="pref-value" id="disp-pref-travelers">2</div>
+            <div class="pref-note">Reserved occupancy</div>
+          </div>
+
+          <!-- Card 6: Pace -->
+          <div class="pref-card" data-pref-key="pace">
+            <div class="pref-card-header">
+              <div class="pref-card-label-group">
+                <span class="pref-icon-circle">🧘</span>
+                <span class="pref-label">Pace</span>
+              </div>
+              <button class="btn-edit-pref" data-edit="pace">Edit</button>
+            </div>
+            <div class="pref-value" id="disp-pref-pace">Relaxed</div>
+            <div class="pref-note">Pacing style</div>
+          </div>
+
+        </div>
+
+        <!-- Bottom CTA -->
+        <div class="bottom-actions">
+          <button class="btn-secondary" data-back-to="home">← Back to Prompt</button>
+          <button class="btn-primary-cta" id="btn-confirm-find-trips">
+            <span>Search & Rank Packages</span>
+            <span class="cta-arrow">→</span>
+          </button>
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           SCREEN 3: RESULTS SCREEN
+           ==================================================================== -->
+      <section class="screen results-screen" id="screen-results" aria-label="Trip Results Screen">
+
+        <div class="screen-header-bar">
+          <button class="screen-back-btn" data-back-to="preferences">
+            <span>←</span> Back to Preferences
+          </button>
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--primary);">Step 3 of 4</span>
+        </div>
+
+        <div class="screen-title-group">
+          <h2 class="screen-title">Top Ranked Packages</h2>
+          <p class="screen-subtitle">Hybrid decision intelligence ranking considering budget fit, effective costs,
+            travel intensity, and verified review sentiment.</p>
+        </div>
+
+        <!-- Destination Filter Tabs -->
+        <div class="results-dest-tabs" id="results-dest-tabs">
+          <button class="tab-btn active" data-tab="all">All Packages</button>
+          <button class="tab-btn" data-tab="Himachal (Shimla/Manali)">Himachal (Shimla/Manali)</button>
+          <button class="tab-btn" data-tab="Kerala">Kerala</button>
+        </div>
+
+        <!-- Filter Summary Bar -->
+        <div class="results-filter-summary">
+          <div class="filter-tags-list" id="active-filter-pills">
+            <span class="filter-pill">📍 Delhi</span>
+            <span class="filter-pill">📅 6 Days</span>
+            <span class="filter-pill">💰 Under ₹20,000</span>
+          </div>
+          <button class="btn-compare-all-shortcut" id="btn-compare-shortcut-results">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 3h5v5M4 20L21 3m0 13v5h-5m-6 0H4v-5m0-6V4h5" />
+            </svg>
+            Cross-Provider Compare Matrix
+          </button>
+        </div>
+
+        <!-- Dynamic Packages Cards Container -->
+        <div class="packages-grid" id="packages-cards-list">
+          <!-- Populated dynamically by app.js -->
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           SCREEN 4: PACKAGE DETAILS SCREEN
+           ==================================================================== -->
+      <section class="screen details-screen" id="screen-details" aria-label="Package Details Screen">
+
+        <div class="screen-header-bar">
+          <button class="screen-back-btn" data-back-to="results">
+            <span>←</span> Back to Results
+          </button>
+          <div style="display: flex; gap: 0.4rem;">
+            <button class="btn-header-action" id="btn-details-to-compare">Compare</button>
+          </div>
+        </div>
+
+        <!-- Hero Banner for Selected Package -->
+        <div class="details-hero-banner">
+          <img id="details-hero-img" src="/assets/hero-himachal.svg" alt="Package Hero" class="details-hero-img">
+          <div class="details-hero-overlay">
+            <div class="details-hero-badges" id="details-badges-container">
+              <!-- Rendered dynamically -->
+            </div>
+            <h1 class="details-hero-title" id="details-title">Package Title</h1>
+            <p class="details-hero-subtitle" id="details-subtitle">Package Subtitle</p>
+          </div>
+        </div>
+
+        <!-- Package Agency Intelligence Badge -->
+        <div class="agency-intel-badge-card">
+          <div
+            style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <span class="agency-type-pill" id="details-agency-type">Independent Local Agency</span>
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-top: 0.3rem;"
+                id="details-agency-name">KingHills Travels</h3>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <span class="verified-badge-pill" id="details-verified-tag">✓ Verified TripLens Partner</span>
+              <a href="#" target="_blank" rel="noopener noreferrer" class="btn-source-url"
+                id="details-source-url-link">🌐 View Original Source ↗</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Package Overview Specs Grid -->
+        <div class="details-specs-card">
+          <div class="specs-grid">
+            <div class="spec-item">
+              <span class="spec-item-label">Duration</span>
+              <span class="spec-item-val" id="disp-details-duration">7 Days / 6 Nights</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">Travelers</span>
+              <span class="spec-item-val" id="disp-details-travelers">2 Travelers</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">Departure</span>
+              <span class="spec-item-val" id="disp-details-from">Starting from Delhi</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">Theme</span>
+              <span class="spec-item-val" id="disp-details-focus">Mountains & Snow</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">Pacing</span>
+              <span class="spec-item-val" id="disp-details-pace">Relaxed pace</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Score Cards Row -->
+        <div class="scores-row">
+          <div class="score-card fit">
+            <span class="score-card-title">Fit Score</span>
+            <div class="score-card-number" id="details-score-fit">96%</div>
+            <span class="score-card-desc">Request Fit Match</span>
+          </div>
+          <div class="score-card value">
+            <span class="score-card-title">Value Score</span>
+            <div class="score-card-number" id="details-score-value">94/100</div>
+            <span class="score-card-desc">Disclosed Price Integrity</span>
+          </div>
+          <div class="score-card trust">
+            <span class="score-card-title">Trust Score</span>
+            <div class="score-card-number" id="details-score-trust">93/100</div>
+            <span class="score-card-desc">Review Sentiment Audit</span>
+          </div>
+        </div>
+
+        <!-- Effective Cost Analysis Card -->
+        <div class="cost-card">
+          <div class="cost-card-header">
+            <div>
+              <span class="cost-card-subtitle">TripLens Effective Cost Analysis</span>
+              <div class="cost-effective-amount" id="details-cost-effective">₹19,400</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Includes base price + estimated disclosed
+                exclusions</div>
+            </div>
+            <button class="btn-toggle-cost" id="btn-toggle-cost-breakdown">View Breakdown ▼</button>
+          </div>
+
+          <div class="cost-summary-pills">
+            <div class="cost-pill-item">
+              <span>Advertised Base:</span>
+              <strong id="details-cost-base">₹18,200</strong>
+            </div>
+            <div class="cost-pill-item">
+              <span>Est. Additional Costs:</span>
+              <strong id="details-cost-additional">+₹1,200</strong>
+            </div>
+          </div>
+
+          <div class="cost-items-container" id="cost-items-container" style="display: none;">
+            <!-- Rendered dynamically by app.js -->
+          </div>
+        </div>
+
+        <!-- Inclusions & Exclusions Card -->
+        <div class="inc-exc-grid">
+          <div class="inc-exc-card inclusions">
+            <h4><span class="inc-icon">✓</span> Inclusions</h4>
+            <ul id="details-inclusions-list"></ul>
+          </div>
+          <div class="inc-exc-card exclusions">
+            <h4><span class="exc-icon">✕</span> Exclusions & Extra Add-ons</h4>
+            <ul id="details-exclusions-list"></ul>
+          </div>
+        </div>
+
+        <!-- Dedicated Reviews Section -->
+        <div class="reviews-section-card" id="details-reviews-card">
+          <div class="reviews-header">
+            <div>
+              <span class="reviews-badge-title">⭐ Reviews & Rating</span>
+              <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-top: 0.2rem;"
+                id="details-reviews-rating-title">⭐ 4.8 / 5 Customer Rating</h3>
+              <p style="font-size: 0.78rem; color: var(--text-muted);" id="details-reviews-count-subtitle">Based on 142
+                traveler reviews for this package</p>
+            </div>
+            <a href="#" target="_blank" rel="noopener noreferrer" class="btn-source-url"
+              id="details-reviews-source-link">Source URL ↗</a>
+          </div>
+
+          <!-- Customer Review Quotes Grid -->
+          <div class="customer-reviews-grid" id="details-customer-reviews-list">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+
+        <!-- Bottom Screen Navigation Row -->
+        <div class="details-nav-row">
+          <button class="btn-details-nav" id="btn-nav-to-itinerary">
+            <span>📅 Day-by-Day Itinerary Intelligence</span>
+            <span>→</span>
+          </button>
+          <button class="btn-details-nav" id="btn-nav-to-trust">
+            <span>🛡️ Sentiment & Trust Insights</span>
+            <span>→</span>
+          </button>
+          <button class="btn-details-nav" id="btn-nav-to-compare">
+            <span>⚖️ Cross-Provider Compare</span>
+            <span>→</span>
+          </button>
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           SCREEN 5: ITINERARY SCREEN
+           ==================================================================== -->
+      <section class="screen itinerary-screen" id="screen-itinerary" aria-label="Itinerary Intelligence Screen">
+
+        <div class="screen-header-bar">
+          <button class="screen-back-btn" data-back-to="details">
+            <span>←</span> Back to Details
+          </button>
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--primary);">Itinerary Intelligence</span>
+        </div>
+
+        <div class="screen-title-group">
+          <h2 class="screen-title">Day-by-Day Itinerary Analysis</h2>
+          <p class="screen-subtitle" id="itinerary-pkg-label">Package Day Wise Schedule</p>
+        </div>
+
+        <!-- Dynamic Timeline List -->
+        <div class="timeline-container" id="itinerary-timeline-list">
+          <!-- Populated dynamically by app.js -->
+        </div>
+
+        <div class="bottom-actions">
+          <button class="btn-secondary" data-back-to="details">← Back to Overview</button>
+          <button class="btn-primary-cta" id="btn-itinerary-to-trust">
+            <span>View Review & Trust Insights</span>
+            <span>→</span>
+          </button>
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           SCREEN 6: TRUST INSIGHTS SCREEN
+           ==================================================================== -->
+      <section class="screen trust-screen" id="screen-trust" aria-label="Trust Insights Screen">
+
+        <div class="screen-header-bar">
+          <button class="screen-back-btn" data-back-to="details">
+            <span>←</span> Back to Details
+          </button>
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--primary);">Trust & Review Sentiment</span>
+        </div>
+
+        <div class="screen-title-group">
+          <h2 class="screen-title">Trust & Review Intelligence</h2>
+          <p class="screen-subtitle" id="trust-pkg-label">Aspect-Level Sentiment Analysis</p>
+        </div>
+
+        <!-- Trust Gauge & Summary Banner -->
+        <div class="trust-summary-card">
+          <div class="trust-score-hero">
+            <div class="trust-badge-col">
+              <div class="trust-circle-gauge">
+                <div class="gauge-inner">
+                  <span class="gauge-number" id="trust-disp-score">93</span>
+                  <span class="gauge-scale">/ 100</span>
+                </div>
+              </div>
+              <div class="trust-headline">
+                <h3>Overall Trust Score</h3>
+                <p>Aspect-based sentiment analysis from verified traveler reviews</p>
+              </div>
+            </div>
+            <div
+              style="font-size: 0.78rem; font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 0.35rem 0.75rem; border-radius: var(--radius-pill);">
+              ✓ Verified Independent Agency
+            </div>
+          </div>
+
+          <!-- Sentiment Summary Breakdown -->
+          <div class="sentiment-section">
+            <h4>Review Sentiment Analysis</h4>
+            <div class="sentiment-bar-track" id="trust-sentiment-bar">
+              <div class="sentiment-seg seg-positive" style="width: 94%;" title="94% Positive"></div>
+              <div class="sentiment-seg seg-neutral" style="width: 4%;" title="4% Neutral"></div>
+              <div class="sentiment-seg seg-negative" style="width: 2%;" title="2% Negative"></div>
+            </div>
+            <div class="sentiment-legend" id="trust-sentiment-legend">
+              <span class="legend-item"><span class="legend-dot" style="background: #10B981;"></span>
+                <strong>94%</strong> Positive</span>
+              <span class="legend-item"><span class="legend-dot" style="background: #F59E0B;"></span>
+                <strong>4%</strong> Neutral</span>
+              <span class="legend-item"><span class="legend-dot" style="background: #EF4444;"></span>
+                <strong>2%</strong> Negative</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Aspect Cards Grid -->
+        <div class="aspects-grid" id="trust-aspects-container">
+          <!-- Dynamically populated by app.js: Hotel, Transport, Itinerary, Support -->
+        </div>
+
+        <div class="bottom-actions">
+          <button class="btn-primary-cta" data-back-to="details">
+            <span>Back to Package Overview</span>
+          </button>
+          <button class="btn-secondary" id="btn-trust-to-compare">
+            <span>Compare with other trips →</span>
+          </button>
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           SCREEN 7: COMPARE SCREEN
+           ==================================================================== -->
+      <section class="screen compare-screen" id="screen-compare" aria-label="Compare Screen">
+
+        <div class="screen-header-bar">
+          <button class="screen-back-btn" data-back-to="results">
+            <span>←</span> Back to Results
+          </button>
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--primary);">TripLens Matrix</span>
+        </div>
+
+        <div class="screen-title-group">
+          <h2 class="screen-title">Cross-Provider Decision Matrix</h2>
+          <p class="screen-subtitle">Honest side-by-side comparative analysis of packages across independent travel
+            agencies.</p>
+        </div>
+
+        <!-- Side-by-Side Comparison Table Container -->
+        <div class="compare-table-wrapper" id="compare-table-container">
+          <!-- Rendered dynamically by app.js -->
+        </div>
+
+        <div class="bottom-actions">
+          <button class="btn-secondary" data-back-to="results">
+            ← Back to Results
+          </button>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- ====================================================================
+         MODAL 1: "WHY THIS MATCHES" MODAL
+         ==================================================================== -->
+    <div class="modal-overlay" id="why-match-modal" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.3rem;">✨</span>
+            <span class="modal-title" id="why-modal-title">Why this matches</span>
+          </div>
+          <button class="btn-close-modal" id="btn-close-why-modal" aria-label="Close modal">✕</button>
+        </div>
+
+        <div
+          style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; background: var(--primary-light); border: 1px solid var(--primary-border); padding: 1rem; border-radius: var(--radius-md);">
+          <div style="font-size: 2rem; font-weight: 800; color: var(--primary);" id="why-modal-fit-percent">96%</div>
+          <div>
+            <div style="font-size: 0.95rem; font-weight: 800; color: var(--primary);">Fit Score Match</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Calibrated against your budget, pace, and
+              interests.</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <h4
+            style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 0.6rem;">
+            Match Criteria & Flags Breakdown</h4>
+          <ul class="check-list" id="why-modal-reasons-list">
+            <!-- Dynamically populated -->
+          </ul>
+        </div>
+
+        <button class="btn-primary-cta" id="btn-why-modal-proceed">
+          <span>View Full Package Details</span>
+          <span>→</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 2: EDIT PREFERENCE MODAL
+         ==================================================================== -->
+    <div class="modal-overlay" id="edit-pref-modal" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.2rem;">⚙️</span>
+            <span class="modal-title">Edit Trip Preferences</span>
+          </div>
+          <button class="btn-close-modal" id="btn-close-edit-modal" aria-label="Close modal">✕</button>
+        </div>
+
+        <form id="edit-pref-form">
+          <!-- Min Budget Slider -->
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+              <label class="form-label" style="margin-bottom: 0;">Min Budget:</label>
+              <span class="badge-value" id="edit-min-budget-badge">₹12,000</span>
+            </div>
+            <input type="range" class="form-range" id="edit-field-min-budget-slider" min="8000" max="40000" step="1000"
+              value="12000">
+          </div>
+
+          <!-- Max Budget Slider -->
+          <div class="form-group" style="margin-bottom: 1.2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+              <label class="form-label" style="margin-bottom: 0;">Max Budget:</label>
+              <span class="badge-value" id="edit-max-budget-badge">₹22,000</span>
+            </div>
+            <input type="range" class="form-range" id="edit-field-max-budget-slider" min="10000" max="50000" step="1000"
+              value="22000">
+          </div>
+
+          <!-- Duration Select -->
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Duration (Days):</label>
+            <select class="form-select" id="edit-field-duration">
+              <option value="3">3 Days (Weekend Getaway)</option>
+              <option value="4">4 Days</option>
+              <option value="5">5 Days</option>
+              <option value="6">6 Days</option>
+              <option value="7">7 Days</option>
+              <option value="9">9 Days (Full Circuit)</option>
+            </select>
+          </div>
+
+          <!-- Destination Select -->
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Destination Region:</label>
+            <select class="form-select" id="edit-field-destination">
+              <option value="Himachal (Shimla/Manali)">Himachal (Shimla/Manali)</option>
+              <option value="Kerala">Kerala</option>
+              <option value="all">All Destinations</option>
+            </select>
+          </div>
+
+          <!-- Starting City -->
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Starting City:</label>
+            <select class="form-select" id="edit-field-from">
+              <option value="Delhi">Delhi</option>
+              <option value="Chandigarh">Chandigarh</option>
+              <option value="Bangalore">Bangalore</option>
+              <option value="Kochi">Kochi</option>
+            </select>
+          </div>
+
+          <!-- Travelers Count -->
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Travelers:</label>
+            <select class="form-select" id="edit-field-travelers">
+              <option value="1">1 Person (Solo)</option>
+              <option value="2">2 People (Couple / Pair)</option>
+              <option value="4">4 People (Family / Small Group)</option>
+            </select>
+          </div>
+
+          <!-- Travel Pace -->
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label">Travel Pace:</label>
+            <select class="form-select" id="edit-field-pace">
+              <option value="Relaxed">Relaxed (Ample downtime)</option>
+              <option value="Balanced">Balanced</option>
+              <option value="Active">Active (Multi-city circuit)</option>
+            </select>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button type="button" class="btn-secondary" id="btn-cancel-edit">Cancel</button>
+            <button type="submit" class="btn-primary-cta" style="width: auto; padding: 0.6rem 1.4rem;">
+              <span>Save & Update</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Global Toast Notification UI -->
+    <div class="toast-notification" id="app-toast">
+      <span class="toast-icon" id="toast-icon">✓</span>
+      <span class="toast-message" id="toast-text">Preferences updated successfully.</span>
+    </div>
+
+  </div>
+
+  <!-- JS Dependencies -->
+  <script src="/data.js"></script>
+  <script src="/app.js"></script>
+</body>
+
+</html>

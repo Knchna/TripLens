@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TripLens — Package Manager</title>
+  <link rel="stylesheet" href="/design-system.css"><link rel="stylesheet" href="/styles.css">
+</head>
+<body><main class="main-content" style="max-width:1000px;margin:2rem auto;padding:0 1rem">
+  <a href="/" class="btn-secondary">← Back to TripLens</a>
+  <div class="screen-title-group"><h1 class="screen-title">Package manager</h1><p class="screen-subtitle">Every field below is required to keep package data complete and transparent.</p></div>
+  <div id="quality" class="parsed-callout-card">Loading data-quality report…</div>
+  <form id="package-form" class="pref-card" style="margin-top:1rem">
+    <h2 class="screen-title" style="font-size:1.25rem">1. Core package details</h2>
+    <div class="pref-grid" id="core-fields"></div>
+    <h2 class="screen-title" style="font-size:1.25rem;margin-top:2rem">2. Day-wise itinerary</h2>
+    <div id="itinerary-fields"></div>
+    <h2 class="screen-title" style="font-size:1.25rem;margin-top:2rem">3. Stays & logistics</h2>
+    <div id="accommodation-fields"></div><button class="btn-secondary" type="button" id="add-stay">+ Add stay</button>
+    <h2 class="screen-title" style="font-size:1.25rem;margin-top:2rem">4. Transparency & policy</h2>
+    <label class="form-label">Inclusions — one item per line</label><textarea class="ai-prompt-textarea" id="inclusions" required rows="4" placeholder="Entry tickets&#10;Toll and parking"></textarea>
+    <label class="form-label" style="margin-top:1rem">Exclusions — one item per line</label><textarea class="ai-prompt-textarea" id="exclusions" required rows="4" placeholder="Personal expenses&#10;Safari permits"></textarea>
+    <p id="form-message" aria-live="polite" style="margin-top:1rem"></p><button class="btn-primary-cta" type="submit"><span>Save complete package</span><span>→</span></button>
+  </form>
+</main><script src="/manage.js"></script></body></html>
