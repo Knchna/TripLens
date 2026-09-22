@@ -52,6 +52,21 @@
       </nav>
 
       <div class="header-actions">
+        <button class="btn-header-action" id="btn-user-logout" title="Logout Account" style="display: none;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          <span id="user-logout-label">Logout</span>
+        </button>
+        <button class="btn-header-action" id="btn-travel-profile" title="View your travel profile & history">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          <span>Travel Profile</span>
+        </button>
         <button class="btn-header-action" id="btn-quick-compare" title="Compare all trips">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M16 3h5v5M4 20L21 3m0 13v5h-5m-6 0H4v-5m0-6V4h5" />
@@ -65,9 +80,46 @@
     <main class="main-content">
 
       <!-- ====================================================================
+           SCREEN 0: LOGIN / AUTH SCREEN (FIRST SCREEN)
+           ==================================================================== -->
+      <section class="screen login-screen active" id="screen-login" aria-label="Login Screen">
+        <div style="max-width: 440px; margin: 2rem auto; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); text-align: center; box-shadow: var(--shadow-glass);">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">✈️</div>
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem;">Welcome to TripLens</h2>
+          <p style="font-size: 0.85rem; color: var(--text-subtle); margin-bottom: 1.5rem;">Sign in to access personalized travel intelligence, completed trip memories, and smart package recommendations.</p>
+          
+          <form id="form-screen-auth">
+            <div style="text-align: left; margin-bottom: 1rem;">
+              <label class="form-label" style="display: block; font-size: 0.8rem; margin-bottom: 0.3rem;">Email Address:</label>
+              <input type="email" class="form-input" id="screen-auth-email" placeholder="traveler@example.com" value="traveler@example.com" required style="width: 100%; box-sizing: border-box;">
+            </div>
+            
+            <div style="text-align: left; margin-bottom: 1.5rem;">
+              <label class="form-label" style="display: block; font-size: 0.8rem; margin-bottom: 0.3rem;">Password:</label>
+              <input type="password" class="form-input" id="screen-auth-password" placeholder="••••••••" value="pass123" required style="width: 100%; box-sizing: border-box;">
+            </div>
+
+            <button type="submit" class="btn-primary-cta" id="btn-screen-auth-submit" style="width: 100%; font-size: 0.95rem; padding: 0.75rem; border-radius: var(--radius-md);">
+              <span id="screen-auth-btn-text">Sign In & Continue to TripLens</span>
+              <span class="cta-arrow">→</span>
+            </button>
+          </form>
+
+          <div style="margin-top: 1.25rem; font-size: 0.82rem; color: var(--text-subtle);">
+            <span id="screen-auth-toggle-msg">Don't have an account?</span>
+            <a href="#" id="screen-auth-toggle-link" style="color: var(--primary); font-weight: 700; margin-left: 0.3rem;">Register now</a>
+          </div>
+
+          <div style="margin-top: 1rem; border-top: 1px dashed var(--border-subtle); padding-top: 0.8rem;">
+            <button class="btn-secondary" id="btn-skip-login" style="font-size: 0.75rem; padding: 0.3rem 0.8rem;">Continue as Guest →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
            SCREEN 1: HOME SCREEN
            ==================================================================== -->
-      <section class="screen home-screen active" id="screen-home" aria-label="Home Screen">
+      <section class="screen home-screen" id="screen-home" aria-label="Home Screen">
 
         <!-- Destination Selection Bar -->
         <div class="dest-select-bar">
@@ -125,6 +177,30 @@
           <span>Analyze & Find Matches</span>
           <span class="cta-arrow">→</span>
         </button>
+
+        <!-- ====================================================================
+             PROACTIVE NEXT TRIP SUGGESTIONS SECTION
+             ==================================================================== -->
+        <div class="next-trip-section" id="next-trip-section" style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem;">
+            <div>
+              <div style="font-size: 0.75rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">
+                🔮 Personal Travel Memory Intelligence
+              </div>
+              <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">Where Should You Go Next?</h2>
+              <p style="font-size: 0.8rem; color: var(--text-subtle); margin: 0.2rem 0 0 0;">Proactive destination recommendations learned from your travel history.</p>
+            </div>
+            <div class="next-trip-modes" style="display: flex; gap: 0.4rem;">
+              <button class="dest-pill active" id="mode-pref" data-mode="preferences">🌿 Preferences</button>
+              <button class="dest-pill" id="mode-new" data-mode="something_new">✨ Something New</button>
+              <button class="dest-pill" id="mode-last" data-mode="similar_last">🔄 Like Last Trip</button>
+            </div>
+          </div>
+
+          <div id="next-trip-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
 
       </section>
 
@@ -732,6 +808,143 @@
             <button type="submit" class="btn-primary-cta" style="width: auto; padding: 0.6rem 1.4rem;">
               <span>Save & Update</span>
             </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Travel Profile & History Drawer -->
+    <div class="modal-overlay" id="modal-travel-profile-overlay" aria-hidden="true">
+      <div class="modal-card" style="max-width: 680px; max-height: 85vh; overflow-y: auto;">
+        <div class="modal-header">
+          <h3>Your Travel Profile & Memory</h3>
+          <button class="modal-close-btn" id="btn-close-profile">×</button>
+        </div>
+        <div style="padding: 1.25rem;">
+          <!-- Profile Header Summary -->
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-weight: 700; font-size: 1.05rem;" id="profile-user-id">Traveler Profile: U001</span>
+              <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                <input type="checkbox" id="toggle-personalization" checked>
+                Personalization Enabled
+              </label>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-subtle);" id="profile-stats-summary">
+              Home: Bangalore • Completed Trips: 0 • Feedback Entries: 0
+            </div>
+          </div>
+
+          <!-- Learned Preferences Badges -->
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--primary); letter-spacing: 0.04em; margin-bottom: 0.5rem;">Learned Travel Preferences</h4>
+            <div id="profile-learned-badges" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Completed Trips Timeline -->
+          <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--primary); letter-spacing: 0.04em; margin: 0;">Completed Trips Timeline</h4>
+              <button class="btn-secondary" id="btn-open-log-trip" style="padding: 0.3rem 0.7rem; font-size: 0.75rem;">+ Log Past Trip</button>
+            </div>
+            <div id="profile-trips-timeline" style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
+            <button class="btn-secondary" id="btn-reset-profile" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">Reset Travel History</button>
+            <button class="btn-primary" id="btn-save-profile-settings">Close Profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log Completed Trip & Feedback Modal -->
+    <div class="modal-overlay" id="modal-log-trip-overlay" aria-hidden="true">
+      <div class="modal-card" style="max-width: 500px;">
+        <div class="modal-header">
+          <h3 id="log-trip-modal-title">Log Completed Trip & Feedback</h3>
+          <button class="modal-close-btn" id="btn-close-log-trip">×</button>
+        </div>
+        <form id="form-log-trip" style="padding: 1.25rem;">
+          <input type="hidden" id="log-package-id" value="">
+          
+          <div class="form-group" style="margin-bottom: 0.8rem;">
+            <label class="form-label">Destination(s):</label>
+            <input type="text" class="form-input" id="log-destinations" placeholder="e.g. Kerala, Munnar" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.8rem;">
+            <div class="form-group">
+              <label class="form-label">Duration (Days):</label>
+              <input type="number" class="form-input" id="log-duration" value="5" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Budget Spent (₹):</label>
+              <input type="number" class="form-input" id="log-budget" placeholder="25000">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.8rem;">
+            <label class="form-label">Themes (comma separated):</label>
+            <input type="text" class="form-input" id="log-themes" placeholder="nature, beaches, sightseeing">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.8rem;">
+            <label class="form-label">How was your trip? (Rating 1-5):</label>
+            <select class="form-select" id="log-rating">
+              <option value="5">⭐⭐⭐⭐⭐ (5 - Exceptional)</option>
+              <option value="4" selected>⭐⭐⭐⭐ (4 - Great)</option>
+              <option value="3">⭐⭐⭐ (3 - Average)</option>
+              <option value="2">⭐⭐ (2 - Below Expectations)</option>
+              <option value="1">⭐ (1 - Disappointed)</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.8rem;">
+            <label class="form-label">What did you enjoy most? (comma separated):</label>
+            <input type="text" class="form-input" id="log-liked" placeholder="greenery, houseboat, food">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.2rem;">
+            <label class="form-label">What would you avoid next time? (comma separated):</label>
+            <input type="text" class="form-input" id="log-disliked" placeholder="long drives, early mornings">
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+            <button type="button" class="btn-secondary" id="btn-cancel-log-trip">Cancel</button>
+            <button type="submit" class="btn-primary">Save Trip Memory</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Account Auth Modal -->
+    <div class="modal-overlay" id="modal-auth-overlay" aria-hidden="true">
+      <div class="modal-card" style="max-width: 420px;">
+        <div class="modal-header">
+          <h3 id="auth-modal-title">Traveler Login</h3>
+          <button class="modal-close-btn" id="btn-close-auth">×</button>
+        </div>
+        <form id="form-auth" style="padding: 1.25rem;">
+          <div class="form-group" style="margin-bottom: 0.9rem;">
+            <label class="form-label">Email Address:</label>
+            <input type="email" class="form-input" id="auth-email" placeholder="traveler@example.com" required>
+          </div>
+          <div class="form-group" style="margin-bottom: 1.2rem;">
+            <label class="form-label">Password:</label>
+            <input type="password" class="form-input" id="auth-password" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn-primary" style="width: 100%; font-size: 0.9rem; padding: 0.6rem;" id="btn-submit-auth">
+            Sign In
+          </button>
+          <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem; color: var(--text-subtle);">
+            <span id="auth-toggle-msg">Don't have an account?</span>
+            <a href="#" id="auth-toggle-link" style="color: var(--primary); font-weight: 700; margin-left: 0.3rem;">Register now</a>
           </div>
         </form>
       </div>

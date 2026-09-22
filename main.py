@@ -264,3 +264,112 @@ def get_package_detail(package_id: str):
     pkg["trust_insights"] = None
 
     return pkg
+
+
+# --- User Auth & Profile Endpoints ---
+
+class LoginInput(BaseModel):
+    email: str
+    password: str
+
+class RegisterInput(BaseModel):
+    email: str
+    password: str
+    role: str = "traveler"
+    agency_name: str | None = None
+
+@app.post("/api/auth/register")
+def register_user(payload: RegisterInput):
+    from scripts.auth_service import create_user
+    res = create_user(payload.email, payload.password, payload.role, payload.agency_name)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message"))
+    return res
+
+@app.post("/api/auth/login")
+def login_user(payload: LoginInput):
+    from scripts.auth_service import verify_user
+    res = verify_user(payload.email, payload.password)
+    if not res.get("authenticated"):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    return res
+
+class ProfileSettingsInput(BaseModel):
+    user_id: str = "U001"
+    home_location: str | None = None
+    personalization_enabled: bool | None = None
+    avoided_preferences: list[str] | None = None
+
+
+class TripHistoryInput(BaseModel):
+    user_id: str = "U001"
+    package_id: str | None = None
+    destinations: list[str] | str
+    start_location: str | None = None
+    travel_date: str | None = None
+    duration_days: int | None = None
+    budget_spent_inr: float | None = None
+    travelers: int | None = None
+    themes: list[str] | None = None
+    pace: str | None = None
+    transport: str | None = None
+    user_rating: float | None = None
+    user_feedback: str | None = ""
+    liked: list[str] | None = None
+    disliked: list[str] | None = None
+    source: str = "manual_entry"
+
+
+class NextTripRequest(BaseModel):
+    user_id: str = "U001"
+    mode: str = "preferences"  # preferences, something_new, similar_last
+    top_k: int = 6
+
+
+@app.get("/api/user/profile")
+def get_profile(user_id: str = "U001"):
+    from scripts.user_profile import get_user_profile
+    profile = get_user_profile(user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return profile
+
+
+@app.post("/api/user/profile")
+def update_profile(payload: ProfileSettingsInput):
+    from scripts.user_profile import update_user_profile_settings
+    settings = payload.dict(exclude_none=True)
+    return update_user_profile_settings(user_id=payload.user_id, settings=settings)
+
+
+@app.delete("/api/user/profile/reset")
+def reset_profile_history(user_id: str = "U001"):
+    from scripts.user_profile import reset_user_history
+    return reset_user_history(user_id)
+
+
+@app.get("/api/user/trips")
+def get_user_trips(user_id: str = "U001"):
+    from scripts.trip_history import get_trip_history
+    return {"trips": get_trip_history(user_id)}
+
+
+@app.post("/api/user/trips", status_code=201)
+def log_completed_trip(payload: TripHistoryInput):
+    from scripts.trip_history import add_completed_trip
+    trip_data = payload.dict()
+    saved = add_completed_trip(trip_data, user_id=payload.user_id)
+    return {"message": "Trip logged successfully", "trip": saved}
+
+
+@app.delete("/api/user/trips/{trip_id}")
+def delete_trip(trip_id: str, user_id: str = "U001"):
+    from scripts.trip_history import delete_trip_entry
+    return delete_trip_entry(trip_id=trip_id, user_id=user_id)
+
+
+@app.post("/api/next-trip-suggestions")
+def next_trip_suggestions(req: NextTripRequest):
+    from scripts.next_trip import get_next_trip_suggestions
+    return get_next_trip_suggestions(user_id=req.user_id, mode=req.mode, top_k=req.top_k)
+

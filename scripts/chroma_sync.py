@@ -1,6 +1,10 @@
 import os
 import math
 import sqlite3
+
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
 import chromadb
 from chromadb.utils import embedding_functions
 

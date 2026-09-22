@@ -6,16 +6,17 @@
 document.addEventListener("DOMContentLoaded", () => {
   // App State Store
   const state = {
-    currentScreen: "home",
-    previousScreen: "home",
-    history: ["home"],
+    currentScreen: localStorage.getItem("triplens_user") ? "home" : "login",
+    previousScreen: "login",
+    history: [localStorage.getItem("triplens_user") ? "home" : "login"],
     selectedPackageId: "hp002",
     activeDestFilter: "Himachal (Shimla/Manali)",
     userPrompt: TRIPWISE_DATA.defaultRequest,
     preferences: { ...TRIPWISE_DATA.defaultPreferences },
     costBreakdownOpen: false,
     searchResults: null,
-    selectedPackageData: null
+    selectedPackageData: null,
+    isGuest: false  // true when user chose "Continue as Guest"
   };
 
   // DOM Elements Cache
@@ -236,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
       image: String(apiPkg.destinations || "").toLowerCase().includes("kerala") ? "/assets/hero-kerala.svg" : "/assets/hero-himachal.svg",
       badge: "DATA-BASED MATCH", badgeIcon: "✓",
       overview: { focusText: apiPkg.theme_clean || apiPkg.theme || "Not specified", paceText: apiPkg.itinerary_pace_inferred || apiPkg.itinerary_pace || "Not specified" },
-      valueScore: Math.round((apiPkg.data_completeness_score || 0) * 100), trustScore: "N/A", rating: null,
+      valueScore: Math.round(apiPkg.data_completeness_score || 0), trustScore: "N/A", rating: null,
       costBreakdown: { packagePrice: price, estimatedAdditional: 0, effectiveTotal: price, items: [] },
       inclusions: apiPkg.inclusions || [], exclusions: apiPkg.exclusions || [], itinerary,
       itinerary_available: apiPkg.itinerary_available, reviews_available: false,
@@ -291,7 +292,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     state.currentScreen = screenName;
 
-    elements.screens.forEach((screen) => {
+    const screens = document.querySelectorAll(".screen");
+    screens.forEach((screen) => {
       if (screen.id === `screen-${screenName}`) {
         screen.classList.add("active");
       } else {
@@ -1283,14 +1285,431 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Initialization
-  function init() {
-    renderSuggestionChips();
-    parseNaturalLanguage(state.userPrompt);
-    renderResultsScreen();
-    attachEventListeners();
-    console.log("TripLens initialized with HP sample dataset & AI recommendations.");
-  }
+    // --- Personal Travel Memory & Next-Trip Handlers ---
+    const profileModal = document.getElementById("modal-travel-profile-overlay");
+    const logTripModal = document.getElementById("modal-log-trip-overlay");
+    const btnTravelProfile = document.getElementById("btn-travel-profile");
+    const btnCloseProfile = document.getElementById("btn-close-profile");
+    const btnSaveProfileSettings = document.getElementById("btn-save-profile-settings");
+    const btnResetProfile = document.getElementById("btn-reset-profile");
+    const btnOpenLogTrip = document.getElementById("btn-open-log-trip");
+    const btnCloseLogTrip = document.getElementById("btn-close-log-trip");
+    const btnCancelLogTrip = document.getElementById("btn-cancel-log-trip");
+    const formLogTrip = document.getElementById("form-log-trip");
+    const togglePersonalization = document.getElementById("toggle-personalization");
+    const nextTripCardsGrid = document.getElementById("next-trip-cards-grid");
 
-  init();
-});
+    let currentNextTripMode = "preferences";
+
+    async function loadNextTripSuggestions(mode = "preferences") {
+      currentNextTripMode = mode;
+      document.querySelectorAll(".next-trip-modes .dest-pill").forEach(b => {
+        b.classList.toggle("active", b.dataset.mode === mode);
+      });
+
+      if (!nextTripCardsGrid) return;
+      nextTripCardsGrid.innerHTML = `<div style="grid-column: 1/-1; color: var(--text-subtle); padding: 1.5rem; text-align: center;">Analyzing travel history and generating suggestions...</div>`;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/next-trip-suggestions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: "U001", mode: mode, top_k: 4 })
+        });
+        if (!res.ok) throw new Error("Next trip fetch failed");
+        const data = await res.json();
+        renderNextTripCards(data.results || [], data.is_cold_start);
+      } catch (err) {
+        console.error("Next trip error:", err);
+        nextTripCardsGrid.innerHTML = `<div style="grid-column: 1/-1; color: var(--text-subtle); padding: 1rem; text-align: center;">Could not load next-trip suggestions. Ensure uvicorn server is running.</div>`;
+      }
+    }
+
+    function renderNextTripCards(results, isColdStart) {
+      if (!results || results.length === 0) {
+        nextTripCardsGrid.innerHTML = `<div style="grid-column: 1/-1; color: var(--text-subtle); padding: 1rem;">No recommendations found. Try logging a completed trip to train your profile!</div>`;
+        return;
+      }
+
+      nextTripCardsGrid.innerHTML = results.map(item => {
+        const exp = item.explanation || {};
+        const matched = (exp.matched_reasons || []).map(r => `<div style="font-size: 0.73rem; color: #10b981; margin-bottom: 0.2rem;">✓ ${r}</div>`).join("");
+        const concerns = (exp.potential_concerns || []).map(c => `<div style="font-size: 0.73rem; color: #f59e0b; margin-top: 0.2rem;">⚠ ${c}</div>`).join("");
+
+        return `
+          <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem; display: flex; flex-direction: column; justify-space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem;">
+                <span style="font-size: 0.7rem; font-weight: 700; color: var(--primary); background: rgba(59,130,246,0.1); padding: 0.15rem 0.4rem; border-radius: 4px;">
+                  ${item.novelty_score >= 80 ? "✨ UNEXPLORED" : "🌿 PREFERENCE FIT"}
+                </span>
+                <span style="font-size: 0.85rem; font-weight: 700; color: #10b981;">${item.fit_score}% FIT</span>
+              </div>
+              <h4 style="font-size: 0.95rem; font-weight: 700; margin: 0 0 0.2rem 0;">${item.package_name}</h4>
+              <div style="font-size: 0.78rem; color: var(--text-subtle); margin-bottom: 0.6rem;">
+                📍 ${item.destinations} • ⏱️ ${item.duration_days} Days • ₹${Number(item.price || 0).toLocaleString('en-IN')}
+              </div>
+              <div style="background: rgba(0,0,0,0.2); border-radius: 6px; padding: 0.6rem; margin-bottom: 0.8rem;">
+                <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.3rem;">Why TripLens Suggested This</div>
+                ${matched || '<div style="font-size: 0.73rem; color: var(--text-subtle);">Popular curated package</div>'}
+                ${concerns}
+              </div>
+            </div>
+            <button class="btn-secondary btn-view-pkg-detail" data-id="${item.package_id}" style="width: 100%; font-size: 0.78rem; padding: 0.4rem;">
+              View Package Details
+            </button>
+          </div>
+        `;
+      }).join("");
+
+      nextTripCardsGrid.querySelectorAll(".btn-view-pkg-detail").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const pkgId = btn.dataset.id;
+          state.selectedPackageId = pkgId;
+          loadPackageDetail(pkgId).then(() => navigateTo("details"));
+        });
+      });
+    }
+
+    async function loadUserProfile() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/user/profile?user_id=U001`);
+        if (!res.ok) return;
+        const profile = await res.json();
+        renderProfileModal(profile);
+      } catch (e) {
+        console.error("Failed to load profile:", e);
+      }
+    }
+
+    async function renderProfileModal(profile) {
+      document.getElementById("profile-user-id").innerText = `Traveler Profile: ${profile.user_id} (${profile.home_location})`;
+      togglePersonalization.checked = profile.personalization_enabled;
+
+      const tripsRes = await fetch(`${API_BASE_URL}/api/user/trips?user_id=U001`);
+      const tripsData = tripsRes.ok ? await tripsRes.json() : { trips: [] };
+      const trips = tripsData.trips || [];
+
+      document.getElementById("profile-stats-summary").innerText = `Home: ${profile.home_location} • Completed Trips: ${trips.length} • Learned Themes: ${profile.preferred_themes.length}`;
+
+      // Learned Badges
+      const badgesContainer = document.getElementById("profile-learned-badges");
+      if (profile.preferred_themes.length === 0) {
+        badgesContainer.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-subtle);">No learned preferences yet. Log completed trips below to train your profile!</span>`;
+      } else {
+        badgesContainer.innerHTML = profile.preferred_themes.map(t => {
+          const conf = (profile.confidence || {})[t] || 0.5;
+          return `<span style="background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: var(--primary); font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 12px;">🌿 ${t} (${Math.round(conf * 100)}% conf)</span>`;
+        }).join(" ") + (profile.avoided_preferences.length > 0 ? profile.avoided_preferences.map(a => `<span style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 12px;">🚫 Avoid: ${a}</span>`).join(" ") : "");
+      }
+
+      // Trips Timeline
+      const timelineContainer = document.getElementById("profile-trips-timeline");
+      if (trips.length === 0) {
+        timelineContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-subtle); padding: 1rem; border: 1px dashed var(--border-subtle); border-radius: 8px; text-align: center;">Your travel history is empty. Click "+ Log Past Trip" to record completed trips!</div>`;
+      } else {
+        timelineContainer.innerHTML = trips.map(t => `
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 700; font-size: 0.88rem;">📍 ${(t.destinations || []).join(", ")}</div>
+              <div style="font-size: 0.75rem; color: var(--text-subtle);">
+                ${t.duration_days ? t.duration_days + ' Days • ' : ''}₹${Number(t.budget_spent_inr || 0).toLocaleString('en-IN')} • Rating: ${'⭐'.repeat(t.user_rating || 5)}
+              </div>
+              ${t.user_feedback ? `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">"${t.user_feedback}"</div>` : ''}
+            </div>
+            <button class="btn-delete-trip" data-id="${t.trip_id}" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.9rem;" title="Delete trip">🗑️</button>
+          </div>
+        `).join("");
+
+        timelineContainer.querySelectorAll(".btn-delete-trip").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const tripId = btn.dataset.id;
+            await fetch(`${API_BASE_URL}/api/user/trips/${tripId}`, { method: "DELETE" });
+            showToast("Trip removed from history", "🗑️");
+            loadUserProfile();
+            loadNextTripSuggestions(currentNextTripMode);
+          });
+        });
+      }
+    }
+
+    btnTravelProfile.addEventListener("click", () => {
+      loadUserProfile();
+      profileModal.setAttribute("aria-hidden", "false");
+      profileModal.classList.add("active");
+    });
+
+    btnCloseProfile.addEventListener("click", () => {
+      profileModal.setAttribute("aria-hidden", "true");
+      profileModal.classList.remove("active");
+    });
+
+    btnSaveProfileSettings.addEventListener("click", async () => {
+      const isEnabled = togglePersonalization.checked;
+      await fetch(`${API_BASE_URL}/api/user/profile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: "U001", personalization_enabled: isEnabled })
+      });
+      profileModal.setAttribute("aria-hidden", "true");
+      profileModal.classList.remove("active");
+      loadNextTripSuggestions(currentNextTripMode);
+    });
+
+    btnResetProfile.addEventListener("click", async () => {
+      if (confirm("Reset all travel history and learned preferences?")) {
+        await fetch(`${API_BASE_URL}/api/user/profile/reset?user_id=U001`, { method: "DELETE" });
+        showToast("Travel history reset.", "ℹ");
+        loadUserProfile();
+        loadNextTripSuggestions(currentNextTripMode);
+      }
+    });
+
+    btnOpenLogTrip.addEventListener("click", () => {
+      logTripModal.setAttribute("aria-hidden", "false");
+      logTripModal.classList.add("active");
+    });
+
+    const closeLogTrip = () => {
+      logTripModal.setAttribute("aria-hidden", "true");
+      logTripModal.classList.remove("active");
+    };
+
+    btnCloseLogTrip.addEventListener("click", closeLogTrip);
+    btnCancelLogTrip.addEventListener("click", closeLogTrip);
+
+    formLogTrip.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        user_id: "U001",
+        package_id: document.getElementById("log-package-id").value || null,
+        destinations: document.getElementById("log-destinations").value,
+        duration_days: parseInt(document.getElementById("log-duration").value, 10),
+        budget_spent_inr: parseFloat(document.getElementById("log-budget").value) || 25000,
+        themes: document.getElementById("log-themes").value.split(",").map(s => s.trim()).filter(Boolean),
+        user_rating: parseFloat(document.getElementById("log-rating").value),
+        liked: document.getElementById("log-liked").value.split(",").map(s => s.trim()).filter(Boolean),
+        disliked: document.getElementById("log-disliked").value.split(",").map(s => s.trim()).filter(Boolean),
+        source: "manual_entry"
+      };
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/user/trips`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          showToast("Trip memory & feedback saved!", "✨");
+          closeLogTrip();
+          loadUserProfile();
+          loadNextTripSuggestions(currentNextTripMode);
+        }
+      } catch (err) {
+        console.error("Failed to save trip memory:", err);
+      }
+    });
+
+    // --- Account Authentication Handlers ---
+    const btnUserLogout = document.getElementById("btn-user-logout");
+    const userLogoutLabel = document.getElementById("user-logout-label");
+    const authModal = document.getElementById("modal-auth-overlay");
+    const btnCloseAuth = document.getElementById("btn-close-auth");
+    const formAuth = document.getElementById("form-auth");
+    const authModalTitle = document.getElementById("auth-modal-title");
+    const btnSubmitAuth = document.getElementById("btn-submit-auth");
+    const authToggleMsg = document.getElementById("auth-toggle-msg");
+    const authToggleLink = document.getElementById("auth-toggle-link");
+
+    let authMode = "login";
+    let currentUser = JSON.parse(localStorage.getItem("triplens_user")) || null;
+
+    function updateAuthUi() {
+      if (currentUser && btnUserLogout) {
+        // Logged-in user: show "Logout (username)"
+        btnUserLogout.style.display = "inline-flex";
+        btnUserLogout.title = "Logout";
+        userLogoutLabel.innerText = `Logout (${currentUser.email.split("@")[0]})`;
+      } else if (state.isGuest && btnUserLogout) {
+        // Guest user: show "Exit Guest Mode" to return to login
+        btnUserLogout.style.display = "inline-flex";
+        btnUserLogout.title = "Exit guest mode and return to login";
+        userLogoutLabel.innerText = "Exit Guest Mode";
+      } else if (btnUserLogout) {
+        btnUserLogout.style.display = "none";
+      }
+    }
+
+    if (btnUserLogout) {
+      btnUserLogout.addEventListener("click", () => {
+        if (currentUser) {
+          if (confirm("Are you sure you want to log out?")) {
+            currentUser = null;
+            localStorage.removeItem("triplens_user");
+            state.isGuest = false;
+            updateAuthUi();
+            showToast("Logged out successfully.");
+            navigateTo("login");
+          }
+        } else if (state.isGuest) {
+          // Guest exits back to login screen
+          state.isGuest = false;
+          updateAuthUi();
+          showToast("Returned to login screen.");
+          navigateTo("login");
+        }
+      });
+    }
+
+    if (btnCloseAuth) {
+      btnCloseAuth.addEventListener("click", () => {
+        authModal.setAttribute("aria-hidden", "true");
+        authModal.classList.remove("active");
+      });
+    }
+
+    if (authToggleLink) {
+      authToggleLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        authMode = authMode === "login" ? "register" : "login";
+        if (authMode === "register") {
+          authModalTitle.innerText = "Create Traveler Account";
+          btnSubmitAuth.innerText = "Register Account";
+          authToggleMsg.innerText = "Already have an account?";
+          authToggleLink.innerText = "Sign In";
+        } else {
+          authModalTitle.innerText = "Traveler Login";
+          btnSubmitAuth.innerText = "Sign In";
+          authToggleMsg.innerText = "Don't have an account?";
+          authToggleLink.innerText = "Register now";
+        }
+      });
+    }
+
+    if (formAuth) {
+      formAuth.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("auth-email").value.trim();
+        const password = document.getElementById("auth-password").value;
+
+        const endpoint = authMode === "login" ? "/api/auth/login" : "/api/auth/register";
+        try {
+          const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Authentication failed");
+
+          currentUser = { email: email, user_id: data.user_id || "U001" };
+          localStorage.setItem("triplens_user", JSON.stringify(currentUser));
+          updateAuthUi();
+          authModal.setAttribute("aria-hidden", "true");
+          authModal.classList.remove("active");
+          showToast(authMode === "login" ? "Logged in successfully!" : "Account registered successfully!", "✨");
+          loadUserProfile();
+          loadNextTripSuggestions(currentNextTripMode);
+        } catch (err) {
+          showToast(err.message, "⚠");
+        }
+      });
+    }
+
+    // --- Login Screen (Screen 0) Handlers ---
+    const formScreenAuth = document.getElementById("form-screen-auth");
+    const screenAuthEmail = document.getElementById("screen-auth-email");
+    const screenAuthPassword = document.getElementById("screen-auth-password");
+    const screenAuthBtnText = document.getElementById("screen-auth-btn-text");
+    const screenAuthToggleMsg = document.getElementById("screen-auth-toggle-msg");
+    const screenAuthToggleLink = document.getElementById("screen-auth-toggle-link");
+    const btnSkipLogin = document.getElementById("btn-skip-login");
+
+    let screenAuthMode = "login";
+
+    if (screenAuthToggleLink) {
+      screenAuthToggleLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        screenAuthMode = screenAuthMode === "login" ? "register" : "login";
+        if (screenAuthMode === "register") {
+          screenAuthBtnText.innerText = "Register Account & Continue";
+          screenAuthToggleMsg.innerText = "Already have an account?";
+          screenAuthToggleLink.innerText = "Sign In";
+        } else {
+          screenAuthBtnText.innerText = "Sign In & Continue to TripLens";
+          screenAuthToggleMsg.innerText = "Don't have an account?";
+          screenAuthToggleLink.innerText = "Register now";
+        }
+      });
+    }
+
+    if (formScreenAuth) {
+      formScreenAuth.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = screenAuthEmail.value.trim();
+        const password = screenAuthPassword.value;
+
+        const endpoint = screenAuthMode === "login" ? "/api/auth/login" : "/api/auth/register";
+        try {
+          const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Authentication failed");
+
+          currentUser = { email: email, user_id: data.user_id || "U001" };
+          localStorage.setItem("triplens_user", JSON.stringify(currentUser));
+          updateAuthUi();
+          showToast(screenAuthMode === "login" ? "Welcome back!" : "Account registered!", "✨");
+          navigateTo("home");
+          loadUserProfile();
+          loadNextTripSuggestions(currentNextTripMode);
+        } catch (err) {
+          showToast(err.message, "⚠");
+        }
+      });
+    }
+
+    if (btnSkipLogin) {
+      btnSkipLogin.addEventListener("click", () => {
+        // Mark as guest so the "Exit Guest Mode" button shows in the header
+        state.isGuest = true;
+        updateAuthUi();
+        showToast("Browsing as guest — sign in to save your preferences.", "👤");
+        navigateTo("home");
+      });
+    }
+
+    // --- Next-Trip Suggestion Mode Pill Handlers ---
+    const modePrefBtn = document.getElementById("mode-pref");
+    const modeNewBtn = document.getElementById("mode-new");
+    const modeLastBtn = document.getElementById("mode-last");
+
+    if (modePrefBtn) {
+      modePrefBtn.addEventListener("click", () => loadNextTripSuggestions("preferences"));
+    }
+    if (modeNewBtn) {
+      modeNewBtn.addEventListener("click", () => loadNextTripSuggestions("something_new"));
+    }
+    if (modeLastBtn) {
+      modeLastBtn.addEventListener("click", () => loadNextTripSuggestions("similar_last"));
+    }
+
+    // Initialization
+    function init() {
+      updateAuthUi();
+      renderSuggestionChips();
+      parseNaturalLanguage(state.userPrompt);
+      renderResultsScreen();
+      attachEventListeners();
+      loadNextTripSuggestions("preferences");
+      if (state.currentScreen === "login") {
+        navigateTo("login");
+      }
+      console.log("TripLens initialized with Personal Travel Memory & Next-Trip Engine.");
+    }
+
+    init();
+  });
